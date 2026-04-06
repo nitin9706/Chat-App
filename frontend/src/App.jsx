@@ -34,6 +34,7 @@ export default function App() {
   const { user, logout } = useAuth();
   const [showNewChat, setShowNewChat] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const {
     chats,
     activeContact,
@@ -64,18 +65,37 @@ export default function App() {
   if (!user) return <LoginPage />;
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-sky-50">
-      <Sidebar
-        chats={chats}
-        activeContactId={activeContactId}
-        onSelectContact={selectContact}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        loading={loadingChats}
-        onNewChat={() => setShowNewChat(true)}
-        onCreateGroup={() => setShowCreateGroup(true)}
-        user={user}
-        onLogout={logout}
-      />
+      {/* Sidebar - hidden on mobile, overlay when open */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto`}
+      >
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50"
+          onClick={() => setSidebarOpen(false)}
+        />
+        <Sidebar
+          chats={chats}
+          activeContactId={activeContactId}
+          onSelectContact={(contact) => {
+            selectContact(contact);
+            setSidebarOpen(false); // Close sidebar on mobile after selection
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          loading={loadingChats}
+          onNewChat={() => {
+            setShowNewChat(true);
+            setSidebarOpen(false);
+          }}
+          onCreateGroup={() => {
+            setShowCreateGroup(true);
+            setSidebarOpen(false);
+          }}
+          user={user}
+          onLogout={logout}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
 
       <ChatWindow
         contact={activeContact}
@@ -90,6 +110,7 @@ export default function App() {
         onRemoveMember={removeMember}
         onLeave={leaveGroup}
         onDelete={removeChat}
+        onToggleSidebar={() => setSidebarOpen(true)}
       />
 
       {showNewChat && (

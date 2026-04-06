@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import ChatHeader from './ChatHeader'
-import MessageList from './MessageList'
-import MessageInput from './MessageInput'
-import ChatInfoPanel from './ChatInfoPanel'
+import { useState } from "react";
+import ChatHeader from "./ChatHeader";
+import MessageList from "./MessageList";
+import MessageInput from "./MessageInput";
+import ChatInfoPanel from "./ChatInfoPanel";
 
 export default function ChatWindow({
   contact,
@@ -17,8 +17,9 @@ export default function ChatWindow({
   onRemoveMember,
   onLeave,
   onDelete,
+  onToggleSidebar,
 }) {
-  const [showInfo, setShowInfo] = useState(false)
+  const [showInfo, setShowInfo] = useState(false);
 
   if (!contact) {
     return (
@@ -28,17 +29,23 @@ export default function ChatWindow({
             💬
           </div>
           <p className="text-gray-600 font-medium">Select a conversation</p>
-          <p className="text-sky-400 text-sm mt-1">Choose from your contacts on the left</p>
+          <p className="text-sky-400 text-sm mt-1">
+            Choose from your contacts on the left
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex flex-1 min-w-0">
+    <div className="flex flex-1 min-w-0 relative">
       {/* Main chat */}
       <div className="flex flex-1 flex-col bg-sky-50 min-w-0">
-        <ChatHeader contact={contact} onToggleInfo={() => setShowInfo((p) => !p)} />
+        <ChatHeader
+          contact={contact}
+          onToggleInfo={() => setShowInfo((p) => !p)}
+          onToggleSidebar={onToggleSidebar}
+        />
         <MessageList
           messages={messages}
           loading={loadingMessages}
@@ -48,19 +55,25 @@ export default function ChatWindow({
         <MessageInput onSend={onSend} sending={sendingMessage} />
       </div>
 
-      {/* Info panel */}
+      {/* Info panel - overlay on mobile */}
       {showInfo && (
-        <ChatInfoPanel
-          contact={contact}
-          currentUserId={currentUserId}
-          onClose={() => setShowInfo(false)}
-          onRename={onRename}
-          onAddMember={onAddMember}
-          onRemoveMember={onRemoveMember}
-          onLeave={onLeave}
-          onDelete={onDelete}
-        />
+        <div className="fixed inset-y-0 right-0 z-40 transform md:relative md:translate-x-0 md:z-auto">
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowInfo(false)}
+          />
+          <ChatInfoPanel
+            contact={contact}
+            currentUserId={currentUserId}
+            onClose={() => setShowInfo(false)}
+            onRename={onRename}
+            onAddMember={onAddMember}
+            onRemoveMember={onRemoveMember}
+            onLeave={onLeave}
+            onDelete={onDelete}
+          />
+        </div>
       )}
     </div>
-  )
+  );
 }

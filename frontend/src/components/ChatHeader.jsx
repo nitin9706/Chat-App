@@ -1,4 +1,4 @@
-import { Phone, Video, Info } from "lucide-react";
+import { Phone, Video, Info, Menu } from "lucide-react";
 import Avatar from "./Avatar";
 
 const statusLabel = {
@@ -8,12 +8,19 @@ const statusLabel = {
   group: "Group chat",
 };
 
-export default function ChatHeader({ contact, onToggleInfo }) {
+export default function ChatHeader({ contact, onToggleInfo, onToggleSidebar }) {
   if (!contact) return null;
 
   return (
     <div className="px-6 py-4 bg-white border-b border-sky-100 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden size-9 rounded-xl flex items-center justify-center text-sky-400 hover:bg-sky-50 hover:text-sky-600 transition-colors cursor-pointer mr-2"
+        >
+          <Menu className="size-4" />
+        </button>
         <Avatar
           initials={contact.avatar}
           imageUrl={contact.avatarUrl || ""}
