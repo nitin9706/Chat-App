@@ -94,10 +94,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-y-auto overflow-x-hidden">
+    <div className="h-screen px-4 py-8 overflow-y-auto overflow-x-hidden scrollbar-hide">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(145,92,255,0.28),transparent_40%),radial-gradient(circle_at_70%_65%,rgba(88,177,255,0.20),transparent_45%)] pointer-events-none" />
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md mx-auto">
         <div className="bg-white/15 border border-white/20 backdrop-blur-xl rounded-3xl shadow-[0_20px_48px_rgba(0,0,0,0.35)] p-8 text-white">
           {/* Logo */}
           <div className="flex flex-col items-center mb-7">
