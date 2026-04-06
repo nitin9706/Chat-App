@@ -9,6 +9,7 @@ import {
   loginUser,
   registerUser,
   logOut,
+  googleLogin,
   setUnauthorizedHandler,
 } from "../utils/api";
 import { connectSocket, disconnectSocket } from "../utils/socket";
@@ -107,6 +108,25 @@ export function AuthProvider({ children }) {
     }
   }, [user, forceLogout]);
 
+  // Google Login — POST /users/google
+  const googleLoginHandler = useCallback(async (token) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await googleLogin({ token });
+      const userData = res?.user || res;
+      if (!userData?._id) throw new Error("Invalid Google login response");
+      persist(userData);
+      connectSocket(userData._id);
+      return userData;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const clearError = useCallback(() => setError(""), []);
 
   // Reconnect socket on page reload if already logged in
@@ -117,7 +137,16 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, clearError, login, register, logout }}
+      value={{
+        user,
+        loading,
+        error,
+        clearError,
+        login,
+        register,
+        logout,
+        googleLogin: googleLoginHandler,
+      }}
     >
       {children}
     </AuthContext.Provider>

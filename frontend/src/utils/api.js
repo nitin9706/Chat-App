@@ -70,6 +70,10 @@ export const registerUser = ({
 export const loginUser = ({ username, password }) =>
   apiClient.post("/users/login", { username, password });
 
+// POST /users/google  — body: { token }
+export const googleLogin = ({ token }) =>
+  apiClient.post("/users/google", { token });
+
 // POST /users/logout/:id
 export const logOut = () => apiClient.post("/users/logout");
 

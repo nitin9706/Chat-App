@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { initializeSocket } from "./sockets/socket.js";
 import cors from "cors";
+import helmet from "helmet";
 const app = express();
 
 const httpServer = http.createServer(app);
@@ -13,6 +14,12 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
+  }),
+);
+
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   }),
 );
 app.use(express.json());

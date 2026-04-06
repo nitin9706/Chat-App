@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Eye, EyeOff, Loader2, Camera, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Googlebutton from "../components/Googlebutton";
 
 const inputClass =
   "w-full px-4 py-3 bg-white/15 border border-white/30 rounded-xl text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400/70 focus:border-transparent transition-all backdrop-blur-sm";
@@ -21,7 +22,6 @@ export default function LoginPage() {
   const [tab, setTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const fileRef = useRef(null);
-
   // Login fields
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -136,7 +136,9 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
-
+          <div className="m-4">
+            <Googlebutton />
+          </div>
           {/* Error */}
           {error && (
             <div className="mb-5 px-4 py-3 bg-red-500/15 border border-red-300/40 rounded-xl text-sm text-red-100">
@@ -205,7 +207,7 @@ export default function LoginPage() {
           {tab === "register" && (
             <form onSubmit={handleRegister} className="space-y-4">
               {/* Avatar picker */}
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 ">
                 <input
                   ref={fileRef}
                   type="file"

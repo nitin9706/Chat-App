@@ -23,7 +23,6 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "password is required"],
     },
     refreshToken: {
       type: String,
@@ -36,6 +35,9 @@ const userSchema = new Schema(
     //   required: [true, "phone number is required"],
     // },
     refreshToken: {
+      type: String,
+    },
+    googleId: {
       type: String,
     },
   },

@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { getIO } from "../sockets/socket.js";
+import { OAuth2Client } from "google-auth-library";
 
 const generateRefreshTokenAndAccessToken = async (userId) => {
   const user = await User.findById(userId);
@@ -192,10 +193,68 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     );
 });
 
+// google login things
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = asyncHandler(async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    console.log("GOOGLE USER:", payload);
+
+    const { email, name, picture, sub } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        fullname: name,
+        email: email,
+        googleId: sub,
+        avatar: picture,
+        username: email,
+      });
+    }
+
+    const { refreshToken, accessToken } =
+      await generateRefreshTokenAndAccessToken(user._id);
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res
+      .status(200)
+      .cookie("refreshToken", refreshToken, options)
+      .cookie("accessToken", accessToken, options)
+      .json({
+        success: true,
+        accessToken,
+        user,
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Google authentication failed" });
+  }
+});
+
+const sendMe = asyncHandler(async (req, res) => {
+  res.json(req.user);
+});
 export {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
   changePassword,
+  googleLogin,
+  sendMe,
 };
