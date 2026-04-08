@@ -7,6 +7,7 @@ import ChatWindow from "./components/ChatWindow";
 import NewChatModal from "./components/NewChatModal";
 import CreateGroupModal from "./components/CreateGroupModal";
 import LoginPage from "./pages/LoginPage";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // import { refreshAccessToken } from "./utils/api.js";
 
@@ -62,7 +63,12 @@ export default function App() {
   useRef(() => {
     refreshAccessToken;
   });
-  if (!user) return <LoginPage />;
+  if (!user)
+    return (
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <LoginPage />
+      </GoogleOAuthProvider>
+    );
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-sky-50">
       {/* Sidebar - hidden on mobile, overlay when open */}

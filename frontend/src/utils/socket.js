@@ -38,7 +38,9 @@ export function connectSocket(userId) {
   });
 
   socket.on("connect", () => {
-    console.log("🟢 Socket connected:", socket.id);
+    if (socket) {
+      console.log("🟢 Socket connected:", socket.id);
+    }
   });
 
   socket.on("disconnect", (reason) => {
