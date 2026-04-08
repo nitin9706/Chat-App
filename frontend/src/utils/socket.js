@@ -16,7 +16,20 @@ export function getSocket() {
 }
 
 export function connectSocket(userId) {
-  if (socket?.connected) return socket;
+  if (!userId) {
+    console.warn("Cannot connect socket: userId is required");
+    return null;
+  }
+
+  if (socket?.connected) {
+    console.log("Socket already connected");
+    return socket;
+  }
+
+  // Disconnect existing socket if it exists
+  if (socket) {
+    socket.disconnect();
+  }
 
   socket = io(SOCKET_URL, {
     withCredentials: true,
@@ -28,12 +41,13 @@ export function connectSocket(userId) {
     console.log("🟢 Socket connected:", socket.id);
   });
 
-  socket.on("disconnect", () => {
-    console.log("🔴 Socket disconnected");
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 Socket disconnected:", reason);
   });
 
   socket.on("connect_error", (err) => {
-    console.warn("Socket error:", err.message);
+    console.warn("Socket connection error:", err.message);
+    // Don't throw error, just log it
   });
 
   return socket;
@@ -48,10 +62,14 @@ export function disconnectSocket() {
 
 // Join a chat room
 export function joinChat(chatId) {
-  socket?.emit("join_chat", chatId);
+  if (socket?.connected) {
+    socket.emit("join_chat", chatId);
+  }
 }
 
 // Leave a chat room
 export function leaveChat(chatId) {
-  socket?.emit("leave_chat", chatId);
+  if (socket?.connected) {
+    socket.emit("leave_chat", chatId);
+  }
 }

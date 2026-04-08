@@ -19,7 +19,7 @@ app.use(
 
 app.use(
   helmet({
-    crossOriginOpenerPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   }),
 );
 app.use(express.json());

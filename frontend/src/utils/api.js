@@ -77,6 +77,9 @@ export const googleLogin = ({ token }) =>
 // POST /users/logout/:id
 export const logOut = () => apiClient.post("/users/logout");
 
+// GET /users/me
+export const getCurrentUser = () => apiClient.get("/users/me");
+
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
 
 // GET /message/:chatId?page=1&limit=20

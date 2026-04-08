@@ -10,6 +10,7 @@ import {
   registerUser,
   logOut,
   googleLogin,
+  getCurrentUser,
   setUnauthorizedHandler,
 } from "../utils/api";
 import { connectSocket, disconnectSocket } from "../utils/socket";
@@ -58,7 +59,9 @@ export function AuthProvider({ children }) {
       if (!userData?._id) throw new Error("Invalid login response");
       persist(userData);
       // Connect socket after login
-      connectSocket(userData._id);
+      if (userData._id) {
+        connectSocket(userData._id);
+      }
       return userData;
     } catch (err) {
       setError(err.message);
@@ -85,7 +88,10 @@ export function AuthProvider({ children }) {
         const userData = res?.data || res;
         if (!userData?._id) throw new Error("Invalid register response");
         persist(userData);
-        connectSocket(userData._id);
+        // Connect socket after register
+        if (userData._id) {
+          connectSocket(userData._id);
+        }
         return userData;
       } catch (err) {
         setError(err.message);
@@ -117,7 +123,10 @@ export function AuthProvider({ children }) {
       const userData = res?.user || res;
       if (!userData?._id) throw new Error("Invalid Google login response");
       persist(userData);
-      connectSocket(userData._id);
+      // Connect socket after login
+      if (userData._id) {
+        connectSocket(userData._id);
+      }
       return userData;
     } catch (err) {
       setError(err.message);
@@ -130,10 +139,23 @@ export function AuthProvider({ children }) {
   const clearError = useCallback(() => setError(""), []);
 
   // Reconnect socket on page reload if already logged in
-  if (user?._id && !window.__socketInit) {
-    window.__socketInit = true;
-    connectSocket(user._id);
-  }
+  useEffect(() => {
+    const validateAndConnect = async () => {
+      if (user?._id && !window.__socketInit) {
+        window.__socketInit = true;
+        try {
+          // Try to validate current user to ensure tokens are still valid
+          await getCurrentUser();
+          connectSocket(user._id);
+        } catch (error) {
+          // If validation fails, force logout
+          console.warn("Authentication validation failed, logging out");
+          forceLogout();
+        }
+      }
+    };
+    validateAndConnect();
+  }, [user, forceLogout]);
 
   return (
     <AuthContext.Provider
