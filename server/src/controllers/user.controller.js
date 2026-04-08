@@ -206,12 +206,12 @@ const googleLogin = asyncHandler(async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-
-    console.log("GOOGLE USER:", payload);
+    console.log("Google token verified, user:", payload.email);
 
     const { email, name, picture, sub } = payload;
 
     let user = await User.findOne({ email });
+    console.log("User found in DB:", !!user);
 
     if (!user) {
       user = await User.create({
@@ -221,6 +221,7 @@ const googleLogin = asyncHandler(async (req, res) => {
         avatar: picture,
         username: email,
       });
+      console.log("New user created:", user._id);
     }
 
     const { refreshToken, accessToken } =
@@ -231,6 +232,7 @@ const googleLogin = asyncHandler(async (req, res) => {
       secure: process.env.NODE_ENV === "production",
     };
 
+    console.log("Sending response with cookies");
     res
       .status(200)
       .cookie("refreshToken", refreshToken, options)
@@ -241,7 +243,7 @@ const googleLogin = asyncHandler(async (req, res) => {
         user,
       });
   } catch (error) {
-    console.error(error);
+    console.error("Google login error:", error);
     res.status(500).json({ message: "Google authentication failed" });
   }
 });

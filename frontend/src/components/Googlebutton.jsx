@@ -7,7 +7,7 @@ export default function Googlebutton() {
   const handleSuccess = async (response) => {
     try {
       const token = response.credential;
-      await googleLogin(token);
+      const result = await googleLogin(token);
     } catch (err) {
       console.error("Google login failed:", err);
     }
