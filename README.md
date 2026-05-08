@@ -95,7 +95,7 @@ This project demonstrates how to build scalable chat systems using
 
 #### Frontend
 
-    cd frontend
+    cd client
     npm install
 
 ---
@@ -109,10 +109,6 @@ Create a `.env` file inside the **server** directory.
     JWT_SECRET=your_secret
     CLIENT_URL=http://localhost:5173
 
-If using Docker Compose, also add a root-level `.env` with:
-
-    VITE_GOOGLE_CLIENT_ID=your_google_client_id
-
 ---
 
 ### 4. Run the Application
@@ -124,28 +120,8 @@ If using Docker Compose, also add a root-level `.env` with:
 
 #### Start Frontend
 
-    cd frontend
+    cd client
     npm run dev
-
----
-
-### 5. Run with Docker
-
-From the repository root, build and start both services:
-
-    docker compose up --build
-
-Open the app in a browser at:
-
-    http://localhost:5173
-
-To run in detached mode:
-
-    docker compose up --build -d
-
-If you need to stop the containers:
-
-    docker compose down
 
 ---
 
