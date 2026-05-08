@@ -2,10 +2,12 @@ import { io } from "socket.io-client";
 
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL ||
-  (import.meta.env.VITE_SERVER_API || "http://localhost:8000").replace(
-    "/api",
-    "",
-  );
+  (typeof window !== "undefined"
+    ? window.location.origin
+    : (import.meta.env.VITE_SERVER_API || "http://localhost:8000").replace(
+        /\/api\/.*$/,
+        "",
+      ));
 
 let socket = null;
 
