@@ -11,9 +11,8 @@ export default function Googlebutton() {
     try {
       const token = response.credential;
       dispatch(setAuthStatus("loading"));
-      const response = await apiGoogleLogin({ token });
-      const user =
-        response?.user || response?.data?.user || response?.data || response;
+      const result = await apiGoogleLogin({ token });
+      const user = result?.user || result?.data?.user || result?.data || result;
       if (!user?._id) throw new Error("Invalid Google login response");
       connectSocket(user._id);
       dispatch(setUser(user));
@@ -26,7 +25,7 @@ export default function Googlebutton() {
   return (
     <GoogleLogin
       onSuccess={handleSuccess}
-      onError={() => console.log("Login Failed")}
+      onError={() => dispatch(setAuthError("Google login failed"))}
       useOneTap={false}
     />
   );

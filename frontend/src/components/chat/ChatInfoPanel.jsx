@@ -70,7 +70,7 @@ export default function ChatInfoPanel({
         </span>
         <button
           onClick={onClose}
-          className="md:flex hidden size-7 rounded-lg flex items-center justify-center text-sky-400 hover:bg-sky-50 hover:text-sky-600 transition-colors cursor-pointer"
+          className="hidden md:flex size-7 rounded-lg items-center justify-center text-sky-400 hover:bg-sky-50 hover:text-sky-600 transition-colors cursor-pointer"
         >
           <X className="size-4" />
         </button>

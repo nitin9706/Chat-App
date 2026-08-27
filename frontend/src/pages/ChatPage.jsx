@@ -155,8 +155,14 @@ export default function ChatPage({ user }) {
       authError={authError}
       onSelectContact={handleSelectContact}
       onSearchChange={(value) => dispatch(setSearchQuery(value))}
-      onNewChat={() => setShowNewChat(true)}
-      onCreateGroup={() => setShowCreateGroup(true)}
+      onNewChat={() => {
+        setShowNewChat(true);
+        setSidebarOpen(false);
+      }}
+      onCreateGroup={() => {
+        setShowCreateGroup(true);
+        setSidebarOpen(false);
+      }}
       onLogout={handleLogout}
       onCloseSidebar={() => setSidebarOpen(false)}
       onSend={send}

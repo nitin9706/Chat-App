@@ -59,7 +59,7 @@ export default function ChatWindow({
       {showInfo && (
         <div className="fixed inset-y-0 right-0 z-40 transform md:relative md:translate-x-0 md:z-auto">
           <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50"
+            className="fixed inset-0 bg-black/50 md:hidden"
             onClick={() => setShowInfo(false)}
           />
           <ChatInfoPanel

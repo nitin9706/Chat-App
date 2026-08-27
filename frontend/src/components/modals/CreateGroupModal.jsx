@@ -90,7 +90,7 @@ export default function CreateGroupModal({ onClose, onCreate }) {
                   key={m}
                   className="flex items-center gap-1 bg-sky-100 text-sky-700 text-xs px-2.5 py-1 rounded-full font-medium"
                 >
-                  <span className="max-w-[100px] truncate">{m}</span>
+                  <span className="max-w-25 truncate">{m}</span>
                   <button
                     onClick={() =>
                       setMembers((prev) => prev.filter((x) => x !== m))
