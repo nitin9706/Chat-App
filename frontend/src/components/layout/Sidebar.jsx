@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import SearchBar from "./SearchBar";
 import ContactItem from "./ContactItem";
-import Avatar from "./Avatar";
+import Avatar from "../common/Avatar";
 
 export default function Sidebar({
   chats,

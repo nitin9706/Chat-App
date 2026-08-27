@@ -9,7 +9,7 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import Avatar from "./Avatar";
+import Avatar from "../common/Avatar";
 
 export default function ChatInfoPanel({
   contact,

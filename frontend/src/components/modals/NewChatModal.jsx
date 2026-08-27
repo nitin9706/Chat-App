@@ -1,26 +1,29 @@
-import { useState } from 'react'
-import { Loader2, MessageSquarePlus } from 'lucide-react'
-import Modal from './Modal'
+import { useState } from "react";
+import { Loader2, MessageSquarePlus } from "lucide-react";
+import Modal from "../common/Modal";
 
 export default function NewChatModal({ onClose, onCreate }) {
-  const [username, setUsername] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleStart = async () => {
-    const val = username.trim().toLowerCase()
-    if (!val) { setError('Please enter a username'); return }
-    setLoading(true)
-    setError('')
-    try {
-      await onCreate(val)
-      onClose()
-    } catch (err) {
-      setError(err.message || 'Could not start chat')
-    } finally {
-      setLoading(false)
+    const val = username.trim().toLowerCase();
+    if (!val) {
+      setError("Please enter a username");
+      return;
     }
-  }
+    setLoading(true);
+    setError("");
+    try {
+      await onCreate(val);
+      onClose();
+    } catch (err) {
+      setError(err.message || "Could not start chat");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal title="New Direct Message" onClose={onClose} size="sm">
@@ -30,7 +33,9 @@ export default function NewChatModal({ onClose, onCreate }) {
         </p>
 
         {error && (
-          <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">
+            {error}
+          </p>
         )}
 
         <div>
@@ -41,7 +46,7 @@ export default function NewChatModal({ onClose, onCreate }) {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleStart()}
+            onKeyDown={(e) => e.key === "Enter" && handleStart()}
             placeholder="e.g. john_doe"
             autoFocus
             className="w-full px-3 py-2.5 bg-sky-50 border border-sky-100 rounded-xl text-sm text-gray-700 placeholder:text-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-300 transition-all"
@@ -63,11 +68,13 @@ export default function NewChatModal({ onClose, onCreate }) {
             {loading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              <><MessageSquarePlus className="size-4" /> Start Chat</>
+              <>
+                <MessageSquarePlus className="size-4" /> Start Chat
+              </>
             )}
           </button>
         </div>
       </div>
     </Modal>
-  )
+  );
 }

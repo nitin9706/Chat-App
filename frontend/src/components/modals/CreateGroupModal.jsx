@@ -1,42 +1,50 @@
-import { useState } from 'react'
-import { Loader2, X, UserPlus } from 'lucide-react'
-import Modal from './Modal'
+import { useState } from "react";
+import { Loader2, X, UserPlus } from "lucide-react";
+import Modal from "../common/Modal";
 
 export default function CreateGroupModal({ onClose, onCreate }) {
-  const [name, setName] = useState('')
-  const [userInput, setUserInput] = useState('')
-  const [members, setMembers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [name, setName] = useState("");
+  const [userInput, setUserInput] = useState("");
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const addMember = () => {
-    const val = userInput.trim()
-    if (!val || members.includes(val)) return
-    setMembers((prev) => [...prev, val])
-    setUserInput('')
-  }
+    const val = userInput.trim();
+    if (!val || members.includes(val)) return;
+    setMembers((prev) => [...prev, val]);
+    setUserInput("");
+  };
 
   const handleCreate = async () => {
-    if (!name.trim()) { setError('Group name is required'); return }
-    // Backend needs at least 3 participants total (you + 2 others)
-    if (members.length < 2) { setError('Add at least 2 usernames (group needs 3 total)'); return }
-    setLoading(true)
-    setError('')
-    try {
-      await onCreate(name.trim(), members)
-      onClose()
-    } catch (err) {
-      setError(err.message || 'Failed to create group')
-    } finally {
-      setLoading(false)
+    if (!name.trim()) {
+      setError("Group name is required");
+      return;
     }
-  }
+    // Backend needs at least 3 participants total (you + 2 others)
+    if (members.length < 2) {
+      setError("Add at least 2 usernames (group needs 3 total)");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await onCreate(name.trim(), members);
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to create group");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal title="Create Group Chat" onClose={onClose}>
       <div className="space-y-4">
         {error && (
-          <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">
+            {error}
+          </p>
         )}
 
         <div>
@@ -61,7 +69,9 @@ export default function CreateGroupModal({ onClose, onCreate }) {
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), addMember())
+              }
               placeholder="Enter username (e.g. john_doe)"
               className="flex-1 px-3 py-2.5 bg-sky-50 border border-sky-100 rounded-xl text-sm text-gray-700 placeholder:text-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-300 transition-all"
             />
@@ -76,9 +86,17 @@ export default function CreateGroupModal({ onClose, onCreate }) {
           {members.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {members.map((m) => (
-                <span key={m} className="flex items-center gap-1 bg-sky-100 text-sky-700 text-xs px-2.5 py-1 rounded-full font-medium">
+                <span
+                  key={m}
+                  className="flex items-center gap-1 bg-sky-100 text-sky-700 text-xs px-2.5 py-1 rounded-full font-medium"
+                >
                   <span className="max-w-[100px] truncate">{m}</span>
-                  <button onClick={() => setMembers((prev) => prev.filter((x) => x !== m))} className="text-sky-400 hover:text-sky-700 cursor-pointer">
+                  <button
+                    onClick={() =>
+                      setMembers((prev) => prev.filter((x) => x !== m))
+                    }
+                    className="text-sky-400 hover:text-sky-700 cursor-pointer"
+                  >
                     <X className="size-3" />
                   </button>
                 </span>
@@ -88,7 +106,10 @@ export default function CreateGroupModal({ onClose, onCreate }) {
         </div>
 
         <div className="flex gap-2 pt-1">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-sky-200 text-sky-600 text-sm font-medium rounded-xl hover:bg-sky-50 transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 border border-sky-200 text-sky-600 text-sm font-medium rounded-xl hover:bg-sky-50 transition-colors cursor-pointer"
+          >
             Cancel
           </button>
           <button
@@ -96,10 +117,14 @@ export default function CreateGroupModal({ onClose, onCreate }) {
             disabled={loading}
             className="flex-1 py-2.5 bg-sky-500 hover:bg-sky-600 disabled:bg-sky-200 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            {loading ? <Loader2 className="size-4 animate-spin" /> : 'Create Group'}
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              "Create Group"
+            )}
           </button>
         </div>
       </div>
     </Modal>
-  )
+  );
 }

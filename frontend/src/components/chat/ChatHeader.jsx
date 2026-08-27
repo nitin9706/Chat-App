@@ -1,5 +1,5 @@
 import { Phone, Video, Info, Menu } from "lucide-react";
-import Avatar from "./Avatar";
+import Avatar from "../common/Avatar";
 
 const statusLabel = {
   online: "Active now",

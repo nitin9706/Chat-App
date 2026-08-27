@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Eye, EyeOff, Loader2, Camera, X } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import Googlebutton from "../components/Googlebutton";
+import { useDispatch, useSelector } from "react-redux";
+import { clearError, login, register } from "../store/authSlice";
+import Googlebutton from "../components/auth/Googlebutton";
 
 const inputClass =
   "w-full px-4 py-3 bg-white/15 border border-white/30 rounded-xl text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400/70 focus:border-transparent transition-all backdrop-blur-sm";
@@ -18,7 +19,9 @@ function Field({ label, children }) {
 }
 
 export default function LoginPage() {
-  const { login, register, loading, error, clearError } = useAuth();
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.auth);
+  const loading = status === "loading";
   const [tab, setTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const fileRef = useRef(null);
@@ -35,9 +38,9 @@ export default function LoginPage() {
   const [avatarPreview, setAvatarPreview] = useState(""); // object URL for preview
 
   useEffect(() => {
-    clearError();
+    dispatch(clearError());
     setShowPassword(false);
-  }, [tab]);
+  }, [dispatch, tab]);
 
   // Clean up object URL when component unmounts or file changes
   useEffect(() => {
@@ -65,9 +68,14 @@ export default function LoginPage() {
     e.preventDefault();
     if (!loginUsername.trim() || !loginPassword) return;
     try {
-      await login(loginUsername.trim().toLowerCase(), loginPassword);
+      await dispatch(
+        login({
+          username: loginUsername.trim().toLowerCase(),
+          password: loginPassword,
+        }),
+      ).unwrap();
     } catch {
-      /* shown via context */
+      /* shown via Redux */
     }
   };
 
@@ -81,15 +89,17 @@ export default function LoginPage() {
     )
       return;
     try {
-      await register({
-        username: regUsername.trim().toLowerCase(),
-        email: regEmail.trim().toLowerCase(),
-        fullname: regFullname.trim().toLowerCase(),
-        password: regPassword,
-        avatar: avatarFile || undefined,
-      });
+      await dispatch(
+        register({
+          username: regUsername.trim().toLowerCase(),
+          email: regEmail.trim().toLowerCase(),
+          fullname: regFullname.trim().toLowerCase(),
+          password: regPassword,
+          avatar: avatarFile || undefined,
+        }),
+      ).unwrap();
     } catch {
-      /* shown via context */
+      /* shown via Redux */
     }
   };
 

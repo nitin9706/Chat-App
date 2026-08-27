@@ -1,13 +1,14 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { useAuth } from "../context/AuthContext";
+import { useDispatch } from "react-redux";
+import { googleLogin } from "../../store/authSlice";
 
 export default function Googlebutton() {
-  const { googleLogin } = useAuth();
+  const dispatch = useDispatch();
 
   const handleSuccess = async (response) => {
     try {
       const token = response.credential;
-      const result = await googleLogin(token);
+      await dispatch(googleLogin(token)).unwrap();
     } catch (err) {
       console.error("Google login failed:", err);
     }

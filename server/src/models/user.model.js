@@ -34,9 +34,7 @@ const userSchema = new Schema(
     //   type: String,
     //   required: [true, "phone number is required"],
     // },
-    refreshToken: {
-      type: String,
-    },
+
     googleId: {
       type: String,
     },
