@@ -1,192 +1,272 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addMembers,
-  chatDeleted,
-  chatReceived,
-  chatUpdated,
-  createChat,
-  createGroup,
-  deleteMessage,
-  fetchChatDetails,
-  fetchChats,
-  fetchMessages,
-  leaveChatGroup,
-  mapChat,
-  mapMessage,
-  markRead,
-  messageDeleted,
-  removeChat,
-  removeMember,
-  receiveMessage,
-  renameChat,
-  sendMessage,
-  setActiveChat,
-  setError,
-  setSearchQuery,
-} from "../store/chatSlice";
-import { forceLogout, logout } from "../store/authSlice";
-import { getSocket, joinChat } from "../utils/socket";
-import { setUnauthorizedHandler } from "../utils/api";
+
 import Sidebar from "../components/layout/Sidebar";
 import ChatWindow from "../components/chat/ChatWindow";
+import ErrorToast from "../components/common/ErrorToast";
 import NewChatModal from "../components/modals/NewChatModal";
 import CreateGroupModal from "../components/modals/CreateGroupModal";
-import ErrorToast from "../components/common/ErrorToast";
+
+import { setError, setSearchQuery } from "../store/oneToOneChatSlice";
+
+import {
+  setActiveDetails as setGroupDetails,
+  setGroupError,
+} from "../store/groupChatSlice";
+
+import { forceLogout } from "../store/authSlice";
+
+import {
+  deleteChat,
+  leaveGroupChat,
+  logOut,
+  renameGroupChat,
+  addMemberToGroup,
+  removeMemberFromGroup,
+  setUnauthorizedHandler,
+} from "../utils/api";
+
+import { leaveChat } from "../utils/socket";
+import { mapChat } from "../store/chatUtils";
+
+import ChatController from "./ChatController";
 
 export default function ChatPage({ user }) {
   const dispatch = useDispatch();
-  const {
-    chats: allChats,
-    messages,
-    activeChatId,
-    activeDetails,
-    searchQuery,
-    loadingChats,
-    loadingMessages,
-    sendingMessage,
-    error,
-  } = useSelector((state) => state.chats);
-  const { error: authError } = useSelector((state) => state.auth);
+
+  const direct = useSelector((state) => state.oneToOneChats);
+  const groups = useSelector((state) => state.groupChats);
+  const authError = useSelector((state) => state.auth.error);
+
+  const error = direct.error || groups.error;
+
+  const allChats = [...direct.chats, ...groups.chats];
+  const messages = {
+    ...direct.messages,
+    ...groups.messages,
+  };
+
+  const activeChatId = direct.activeChatId || groups.activeChatId;
+
+  const activeContact =
+    direct.activeDetails ||
+    groups.activeDetails ||
+    allChats.find((chat) => chat.id === activeChatId) ||
+    null;
+
+  const isGroupChat = (chatId) =>
+    allChats.find((chat) => chat.id === chatId)?.isGroup;
+
   const [showNewChat, setShowNewChat] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const chats = allChats.filter((chat) =>
-    chat.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-  const activeContact =
-    activeDetails || allChats.find((chat) => chat.id === activeChatId) || null;
 
-  useEffect(() => {
-    dispatch(fetchChats(user._id));
-    const socket = getSocket();
-    if (!socket) return undefined;
-    const onMessage = (message) =>
-      dispatch(
-        receiveMessage({
-          chatId: message.chatId || message.chat?._id || message.chat,
-          message: mapMessage(message, user._id),
-        }),
-      );
-    const onDeleted = ({ messageId, chatId }) =>
-      dispatch(messageDeleted({ messageId, chatId }));
-    const onNewChat = (chat) => {
-      const mapped = mapChat(chat, user._id);
-      dispatch(chatReceived(mapped));
-      joinChat(mapped.id);
-    };
-    const onUpdated = (chat) => dispatch(chatUpdated(mapChat(chat, user._id)));
-    const onDeletedChat = ({ chatId }) => dispatch(chatDeleted(chatId));
-    socket.on("receive_message", onMessage);
-    socket.on("message_deleted", onDeleted);
-    socket.on("new_chat", onNewChat);
-    socket.on("chat_updated", onUpdated);
-    socket.on("chat_deleted", onDeletedChat);
-    return () => {
-      socket.off("receive_message", onMessage);
-      socket.off("message_deleted", onDeleted);
-      socket.off("new_chat", onNewChat);
-      socket.off("chat_updated", onUpdated);
-      socket.off("chat_deleted", onDeletedChat);
-    };
-  }, [dispatch, user._id]);
+  const chats = allChats.filter((chat) =>
+    chat.name?.toLowerCase().includes(direct.searchQuery.toLowerCase()),
+  );
+
+  /*
+   * ChatController handles:
+   * - loading chats
+   * - socket listeners
+   * - selecting chats
+   * - sending/deleting messages
+   * - creating chats/groups
+   */
+  const { selectContact, send, deleteMsg, createDirect, createGroup } =
+    ChatController({
+      user,
+      allChats,
+      messages,
+      isGroupChat,
+      activeChatId,
+    });
 
   useEffect(() => {
     setUnauthorizedHandler(() => dispatch(forceLogout()));
-    return () => setUnauthorizedHandler(null);
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
   }, [dispatch]);
-  const selectContact = (id) => {
-    dispatch(setActiveChat(id));
-    dispatch(markRead(id));
-    dispatch(fetchChatDetails({ chatId: id, userId: user._id }));
-    if (!messages[id])
-      dispatch(fetchMessages({ chatId: id, userId: user._id }));
+
+  const handleSelectContact = async (id) => {
+    await selectContact(id);
+    setSidebarOpen(false);
   };
-  const clearErrors = () => {
-    dispatch(setError(""));
+
+  const handleLogout = async () => {
+    try {
+      await logOut();
+    } finally {
+      dispatch(forceLogout());
+    }
+  };
+
+  const handleRename = async (chatId, name) => {
+    await renameGroupChat(chatId, name);
+    dispatch({
+      type: "groupChats/groupChatUpdated",
+      payload: { id: chatId, name },
+    });
+  };
+
+  const handleLeave = async (chatId) => {
+    await leaveGroupChat(chatId);
+    leaveChat(chatId);
+  };
+
+  const handleDelete = async (chatId) => {
+    await deleteChat(chatId);
+    leaveChat(chatId);
+  };
+
+  const handleAddMember = async (chatId, usernames) => {
+    const details = mapChat(
+      await addMemberToGroup(chatId, usernames),
+      user._id,
+    );
+    dispatch(setGroupDetails(details));
+  };
+
+  const handleRemoveMember = async (chatId, memberId) => {
+    const details = mapChat(
+      await removeMemberFromGroup(chatId, memberId),
+      user._id,
+    );
+    dispatch(setGroupDetails(details));
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-sky-50">
+    <ChatContent
+      user={user}
+      chats={chats}
+      activeChatId={activeChatId}
+      activeContact={activeContact}
+      messages={messages}
+      searchQuery={direct.searchQuery}
+      loading={direct.loadingChats || groups.loadingChats}
+      loadingMessages={direct.loadingMessages || groups.loadingMessages}
+      sendingMessage={direct.sendingMessage || groups.sendingMessage}
+      sidebarOpen={sidebarOpen}
+      showNewChat={showNewChat}
+      showCreateGroup={showCreateGroup}
+      error={error}
+      authError={authError}
+      onSelectContact={handleSelectContact}
+      onSearchChange={(value) => dispatch(setSearchQuery(value))}
+      onNewChat={() => setShowNewChat(true)}
+      onCreateGroup={() => setShowCreateGroup(true)}
+      onLogout={handleLogout}
+      onCloseSidebar={() => setSidebarOpen(false)}
+      onSend={send}
+      onDeleteMessage={deleteMsg}
+      onRename={handleRename}
+      onLeave={handleLeave}
+      onDelete={handleDelete}
+      onAddMember={handleAddMember}
+      onRemoveMember={handleRemoveMember}
+      onToggleSidebar={() => setSidebarOpen(true)}
+      onCloseNewChat={() => setShowNewChat(false)}
+      onCreateDirect={createDirect}
+      onCloseCreateGroup={() => setShowCreateGroup(false)}
+      onCreateGroupChat={createGroup}
+      onDismissError={() => {
+        dispatch(setError(""));
+        dispatch(setGroupError(""));
+      }}
+    />
+  );
+}
+
+function ChatContent({
+  user,
+  chats,
+  activeChatId,
+  activeContact,
+  messages,
+  searchQuery,
+  loading,
+  loadingMessages,
+  sendingMessage,
+  sidebarOpen,
+  showNewChat,
+  showCreateGroup,
+  error,
+  authError,
+  onSelectContact,
+  onSearchChange,
+  onNewChat,
+  onCreateGroup,
+  onLogout,
+  onCloseSidebar,
+  onSend,
+  onDeleteMessage,
+  onRename,
+  onAddMember,
+  onRemoveMember,
+  onLeave,
+  onDelete,
+  onToggleSidebar,
+  onCloseNewChat,
+  onCreateDirect,
+  onCloseCreateGroup,
+  onCreateGroupChat,
+  onDismissError,
+}) {
+  const visibleError = error || authError;
+
+  return (
+    <main className="h-screen flex overflow-hidden bg-sky-50">
       <div
-        className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto`}
+        className={`${sidebarOpen ? "fixed inset-0 z-30 bg-black/20 md:static md:bg-transparent" : "hidden md:block"}`}
+        onClick={sidebarOpen ? onCloseSidebar : undefined}
       >
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50"
-          onClick={() => setSidebarOpen(false)}
-        />
-        <Sidebar
-          chats={chats}
-          activeContactId={activeChatId}
-          onSelectContact={(id) => {
-            selectContact(id);
-            setSidebarOpen(false);
-          }}
-          searchQuery={searchQuery}
-          onSearchChange={(value) => dispatch(setSearchQuery(value))}
-          loading={loadingChats}
-          onNewChat={() => {
-            setShowNewChat(true);
-            setSidebarOpen(false);
-          }}
-          onCreateGroup={() => {
-            setShowCreateGroup(true);
-            setSidebarOpen(false);
-          }}
-          user={user}
-          onLogout={() => dispatch(logout())}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <div className="h-full" onClick={(event) => event.stopPropagation()}>
+          <Sidebar
+            chats={chats}
+            activeContactId={activeChatId}
+            onSelectContact={onSelectContact}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            loading={loading}
+            onNewChat={onNewChat}
+            onCreateGroup={onCreateGroup}
+            user={user}
+            onLogout={onLogout}
+            onClose={onCloseSidebar}
+          />
+        </div>
       </div>
+
       <ChatWindow
         contact={activeContact}
         messages={messages[activeChatId] || []}
         loadingMessages={loadingMessages}
         sendingMessage={sendingMessage}
-        currentUserId={user._id}
-        onSend={(content, attachments) =>
-          dispatch(
-            sendMessage({
-              content,
-              attachments,
-              chatId: activeChatId,
-              userId: user._id,
-            }),
-          )
-        }
-        onDeleteMessage={(messageId) =>
-          dispatch(deleteMessage({ messageId, chatId: activeChatId }))
-        }
-        onRename={(chatId, name) => dispatch(renameChat({ chatId, name }))}
-        onAddMember={(chatId, members) =>
-          dispatch(addMembers({ chatId, members, userId: user._id }))
-        }
-        onRemoveMember={(chatId, memberId) =>
-          dispatch(removeMember({ chatId, memberId, userId: user._id }))
-        }
-        onLeave={(chatId) => dispatch(leaveChatGroup(chatId))}
-        onDelete={(chatId) => dispatch(removeChat(chatId))}
-        onToggleSidebar={() => setSidebarOpen(true)}
+        currentUserId={user?._id}
+        onSend={onSend}
+        onDeleteMessage={onDeleteMessage}
+        onRename={onRename}
+        onAddMember={onAddMember}
+        onRemoveMember={onRemoveMember}
+        onLeave={onLeave}
+        onDelete={onDelete}
+        onToggleSidebar={onToggleSidebar}
       />
+
       {showNewChat && (
-        <NewChatModal
-          onClose={() => setShowNewChat(false)}
-          onCreate={(username) =>
-            dispatch(createChat({ username, userId: user._id }))
-          }
-        />
+        <NewChatModal onClose={onCloseNewChat} onCreate={onCreateDirect} />
       )}
       {showCreateGroup && (
         <CreateGroupModal
-          onClose={() => setShowCreateGroup(false)}
-          onCreate={(name, members) =>
-            dispatch(createGroup({ name, members, userId: user._id }))
-          }
+          onClose={onCloseCreateGroup}
+          onCreate={onCreateGroupChat}
         />
       )}
-      {(error || authError) && (
-        <ErrorToast message={error || authError} onDismiss={clearErrors} />
+      {visibleError && (
+        <ErrorToast message={visibleError} onDismiss={onDismissError} />
       )}
-    </div>
+    </main>
   );
 }

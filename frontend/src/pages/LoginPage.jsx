@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Eye, EyeOff, Loader2, Camera, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearError, login, register } from "../store/authSlice";
+import {
+  clearError,
+  setAuthError,
+  setAuthStatus,
+  setUser,
+} from "../store/authSlice";
+import { loginUser, registerUser } from "../utils/api";
+import { connectSocket } from "../utils/socket";
 import Googlebutton from "../components/auth/Googlebutton";
 
 const inputClass =
@@ -68,14 +75,18 @@ export default function LoginPage() {
     e.preventDefault();
     if (!loginUsername.trim() || !loginPassword) return;
     try {
-      await dispatch(
-        login({
-          username: loginUsername.trim().toLowerCase(),
-          password: loginPassword,
-        }),
-      ).unwrap();
+      dispatch(setAuthStatus("loading"));
+      const response = await loginUser({
+        username: loginUsername.trim().toLowerCase(),
+        password: loginPassword,
+      });
+      const user =
+        response?.data?.user || response?.user || response?.data || response;
+      if (!user?._id) throw new Error("Invalid login response");
+      connectSocket(user._id);
+      dispatch(setUser(user));
     } catch {
-      /* shown via Redux */
+      dispatch(setAuthError("Authentication failed"));
     }
   };
 
@@ -89,17 +100,20 @@ export default function LoginPage() {
     )
       return;
     try {
-      await dispatch(
-        register({
-          username: regUsername.trim().toLowerCase(),
-          email: regEmail.trim().toLowerCase(),
-          fullname: regFullname.trim().toLowerCase(),
-          password: regPassword,
-          avatar: avatarFile || undefined,
-        }),
-      ).unwrap();
+      dispatch(setAuthStatus("loading"));
+      const response = await registerUser({
+        username: regUsername.trim().toLowerCase(),
+        email: regEmail.trim().toLowerCase(),
+        fullname: regFullname.trim().toLowerCase(),
+        password: regPassword,
+        avatar: avatarFile || undefined,
+      });
+      const user = response?.data || response;
+      if (!user?._id) throw new Error("Invalid register response");
+      connectSocket(user._id);
+      dispatch(setUser(user));
     } catch {
-      /* shown via Redux */
+      dispatch(setAuthError("Registration failed"));
     }
   };
 
