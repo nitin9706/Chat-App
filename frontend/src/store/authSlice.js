@@ -5,9 +5,7 @@ function loadUser() {
   try {
     const user = JSON.parse(localStorage.getItem("chat_user"));
     if (user?._id) return user;
-  } catch {
-    // Ignore invalid persisted user data.
-  }
+  } catch {}
   localStorage.removeItem("chat_user");
   return null;
 }

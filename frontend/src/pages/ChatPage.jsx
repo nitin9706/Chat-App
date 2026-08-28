@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import Sidebar from "../components/layout/Sidebar";
+import Sidebar from "../components/layout/Sidebar/Sidebar";
 import ChatWindow from "../components/chat/ChatWindow";
 import ErrorToast from "../components/common/ErrorToast";
 import NewChatModal from "../components/modals/NewChatModal";

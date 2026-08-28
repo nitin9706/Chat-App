@@ -2,7 +2,7 @@ import { useState } from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import ChatInfoPanel from "./ChatInfoPanel";
+import ChatInfoPanel from "./ChatInfoPanel/ChatInfoPanel";
 
 export default function ChatWindow({
   contact,
